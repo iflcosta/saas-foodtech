@@ -1,0 +1,13 @@
+{
+  "name": "@saas-foodtech/bridge",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Local print bridge (Go) — WebSocket proxy on :9100 for ESC/POS payloads.",
+  "scripts": {
+    "dev": "go run .",
+    "build": "go build -o bin/bridge .",
+    "test": "go test ./...",
+    "typecheck": ":",
+    "lint": ":"
+  }
+}
