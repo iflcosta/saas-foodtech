@@ -28,6 +28,7 @@
 ## Subagent Delegation Map
 
 - Persistência local (IndexedDB), cache offline, sincronização e workers: use **💾 Local-First**.
+- Interface React PWA, design system e usabilidade do PDV, cardápio e onboarding: use **🎨 Frontend/UX**.
 - Impressão térmica nativa, comandos de escape ESC/POS e WebSocket bridge: use **🖨️ ESC-POS**.
 - Webhooks do iFood, fila assíncrona, rate-limits e APIs externas: use **🔌 Integration**.
 - Ledger transacional contábil, segurança do Pix e regras de repasse: use **💰 Ledger**.
