@@ -33,7 +33,7 @@ detalhando os contratos por camada antes de escrever código de aplicação.
 |---|---|---|
 | `spec.md` | Master: visão, roadmap, ADRs Q1–Q10, RF/RNF | Estável |
 | `data-schema.md` | Schema PostgreSQL — 17 tabelas | Escrito — revisão pendente |
-| `api-contracts.md` | Endpoints REST + WebSocket + schemas Zod | Próximo a escrever |
+| `api-contracts.md` | Endpoints REST + WebSocket + schemas Zod | Escrito — revisão pendente |
 | `design-system.md` | Design brief para o Claude Design | Planejado |
 
 ---
@@ -58,7 +58,9 @@ Nada implementado — a Fase 4 ainda não começou.
 
 ## 4. Próximos Passos
 
-1. Escrever `api-contracts.md` — escopo confirmado (ver §6, decisão de 2026-05-22).
+1. **Decidir o roteamento setorial de impressão** — adicionar um campo de fila ao cardápio
+   (`categories` / `products`). Lacuna encontrada ao escrever `api-contracts.md` (ver §11
+   do doc).
 2. Escrever `design-system.md` com o agente Frontend/UX.
 3. Revisar e fechar todas as specs da Fase 2 em conjunto.
 4. Iniciar a Fase 3 — scaffolding do monorepo.
