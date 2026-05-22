@@ -14,14 +14,15 @@
 
 ## 1. Fase Atual
 
-**Fase 2 concluída.** As três specs detalhadas estão estáveis. Próximo: iniciar a Fase 3 —
-scaffolding do monorepo.
+**Fase 3 em andamento.** Esqueleto do monorepo escrito — root config + 3 apps + 2 packages + CI.
+Falta validar localmente (`npm install`, typecheck, lint, test, build do bridge Go) e então
+fechar para entrar na Fase 4 (implementação da V1.0).
 
 | # | Fase | Status |
 |---|---|---|
 | 1 | Especificação fundacional (`spec.md`) | Concluída |
 | 2 | Especificação técnica detalhada | Concluída |
-| 3 | Scaffolding & infraestrutura | Pendente |
+| 3 | Scaffolding & infraestrutura | Em andamento |
 | 4 | Implementação da V1.0 | Pendente |
 | 5 | Lançamento do MVP | Pendente |
 
@@ -40,25 +41,30 @@ scaffolding do monorepo.
 
 ## 3. Status de Implementação
 
-Nada implementado — a Fase 4 ainda não começou.
+Esqueleto da Fase 3 escrito; nenhum requisito funcional implementado ainda.
 
 | Área | Componente | Status |
 |---|---|---|
-| Fundação | Monorepo, scaffolding, CI | Não iniciado |
-| Fundação | Migrations PostgreSQL | Não iniciado |
+| Fundação | Monorepo + npm workspaces + TS estrito + CI | Esqueleto escrito |
+| Fundação | Schema Drizzle (`packages/db` — 17 tabelas) | Modelado — `db:push` ainda não executado |
+| Fundação | Validadores Zod (`packages/shared`) | Esqueleto escrito |
 | Fundação | Auth JWT + middleware de tenant | Não iniciado |
-| RF-1 | Ingestão de pedidos (cardápio, WhatsApp, triagem) | Não iniciado |
-| RF-2 | Motor ESC/POS + ponte de impressão Go | Não iniciado |
+| RF-1 | Ingestão de pedidos (cardápio, WhatsApp, triagem) | Não iniciado (api/pos em esqueleto) |
+| RF-2 | Motor ESC/POS + ponte de impressão Go | Casca WS no `apps/bridge` (`/health` + ack), sem ESC/POS real |
 | RF-3 | Cardápio & onboarding | Não iniciado |
 | RF-4 | Pagamento Pix dinâmico (Asaas) | Não iniciado |
 | RF-5 | Ledger & fechamento de caixa | Não iniciado |
-| RF-6 | Resiliência & diagnóstico (PWA) | Não iniciado |
+| RF-6 | Resiliência & diagnóstico (PWA) | `diagnostics:local` em stub; PWA do `apps/pos` em casca |
 
 ---
 
 ## 4. Próximos Passos
 
-1. Iniciar a Fase 3 — scaffolding do monorepo (Node.js/Fastify + React/Vite PWA + ponte Go).
+1. Validar localmente o esqueleto da Fase 3: `npm install`, `npm run typecheck`, `npm run lint`,
+   `npm run test`, `go build` em `apps/bridge`. Corrigir o que aparecer e marcar a Fase 3 como
+   Concluída.
+2. Iniciar a Fase 4 — implementação da V1.0, começando por RF-1 (ingestão de pedidos) e a
+   fundação de auth/tenant.
 
 ---
 
@@ -83,6 +89,8 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-22 | **Fase 3 iniciada.** Esqueleto do monorepo escrito (root config + `apps/{api,pos,bridge}` + `packages/{db,shared}` + GitHub Actions). Stack escolhida: npm workspaces + TypeScript estrito + Fastify v5 + React 18/Vite 5/`vite-plugin-pwa` + Go 1.22 com `github.com/coder/websocket` + Drizzle ORM/PostgreSQL + Zod + Vitest + ESLint flat + Prettier. **Drizzle** sobre Prisma pelo footprint baixo em VPS 1c/1GB (RNF-2) e schema TS espelho do `data-schema.md`; **npm workspaces** sobre pnpm por alinhamento com `CLAUDE.md`. |
+| 2026-05-22 | Lacuna de spec encontrada no scaffolding: `POST /v1/orders/:id/pix-charge` em `api-contracts.md §8` não define corpo de requisição. Modelado em `packages/shared` com `expires_in_seconds` opcional (`createPixChargeSchema`) — resolver junto da implementação real do Pix (Fase 4) ou voltar para a `api-contracts.md` antes. |
 | 2026-05-22 | **Fase 2 fechada.** Revisão conjunta das três specs detalhadas; as 4 lacunas do `design-system.md` §8 foram resolvidas: (1) acessibilidade promovida a **RNF-7** no `spec.md`; (2) repetição do alerta sonoro elevada a **RF-1.5**; (3) i18n declarada fora de escopo da V1.0 (`spec.md` §7); (4) estado vazio da triagem descrito no `design-system.md` §4.1. §8 do `design-system.md` removido. As três specs ficam em **Estável (V1.0)**. |
 | 2026-05-22 | `design-system.md` escrito — design brief versionado (tokens, componentes-chave, telas, estados de resiliência, handoff com o Claude Design). 4 lacunas de UI sem requisito (acessibilidade, i18n, repetição do alerta sonoro, estado vazio da triagem) registradas no §8 do doc para decisão na revisão da Fase 2, sem criar RF novo. |
 | 2026-05-22 | Roteamento setorial de impressão (RF-2.2): adicionado `categories.print_queue` (`kitchen` / `bar`); o item herda a fila da categoria e a comanda `dispatch` é gerada por pedido. Nível de categoria escolhido pelo menor atrito de onboarding. Lacuna encontrada ao escrever `api-contracts.md`. |
