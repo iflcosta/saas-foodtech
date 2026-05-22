@@ -1,6 +1,6 @@
 # Especificação Principal — SaaS Foodtech POS & Delivery
 
-- **Status:** Escopo Refinado — base para detalhamento técnico
+- **Status:** Escopo da V1.0 fechado — pronto para o detalhamento técnico
 - **Metodologia:** Spec-Driven Development (SDD)
 - **Versão-alvo deste documento:** V1.0 (MVP)
 - **Última atualização:** 2026-05-22
@@ -92,9 +92,11 @@ Central, o cliente paga o QR Code usando **qualquer banco ou carteira** — apen
 O **split do motoboy é lógico/interno ao Ledger** — sem split no nível do gateway. O valor entra
 integral na conta do restaurante; o Ledger de dupla entrada calcula o saldo devedor do motoboy.
 
-> **Sub-decisão em aberto:** modelo de provisionamento da conta por restaurante — subconta
-> white-label criada via API pelo SaaS vs. conta Asaas própria do lojista conectada por
-> credencial. Ver §7.
+**Provisionamento da conta — modelo de conta conectada:** cada restaurante cria a própria conta
+Asaas (com apoio durante o onboarding presencial) e conecta as credenciais de API ao SaaS. O
+SaaS não cria nem custodia contas — a relação de KYC e regulatória fica diretamente entre o
+lojista e o Asaas, reduzindo a responsabilidade do SaaS. A subconta white-label (criação de
+contas via API pelo próprio SaaS) é reavaliada como otimização de onboarding em versão futura.
 
 ### ADR-Q3 — Reconciliação de caixa
 
@@ -252,10 +254,11 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
 - Onboarding de cardápio assistido por IA (extração via Gemini) — a reavaliar após o MVP.
 - **Cobrança da assinatura do SaaS (Fluxo A)** — o recebimento da mensalidade dos lojistas
   pelo operador do SaaS será especificado em etapa posterior.
+- **Pagamento com cartão no checkout digital** — o RF-4 do MVP processa apenas Pix dinâmico via
+  Asaas; cartão de crédito online é expansão pós-MVP, na mesma conta Asaas. O cartão presencial
+  na entrega permanece suportado por lançamento manual no Ledger (ADR-Q3).
 
 ### Pendências em aberto
 
-- **Modelo de provisionamento da conta Asaas por restaurante** (ADR-Q2): subconta white-label
-  criada via API pelo SaaS — onboarding mais fluido para o lojista — vs. conta Asaas própria do
-  restaurante conectada por credencial — mais simples de construir e com menor responsabilidade
-  regulatória para o SaaS.
+- Nenhuma pendência de arquitetura em aberto — o escopo da V1.0 está fechado e o documento está
+  pronto para o detalhamento técnico (schema de dados e contratos de API).
