@@ -53,7 +53,7 @@ mapearam **7 gargalos operacionais críticos**:
 
 | Versão | Escopo |
 |---|---|
-| **V1.0 (MVP)** | Web PWA de Alta Disponibilidade (Service Workers + Cache API + IndexedDB). Canal direto: cardápio digital + redirecionamento WhatsApp. Ponte de impressão Go (porta :9100, USB + Ethernet). Pix dinâmico via PSP. Ledger de dupla entrada + fechamento de caixa cego. PostgreSQL único multi-tenant. |
+| **V1.0 (MVP)** | Web PWA de Alta Disponibilidade (Service Workers + Cache API + IndexedDB). Canal direto: cardápio digital + redirecionamento WhatsApp. Ponte de impressão Go (porta :9100, USB + Ethernet). Pix dinâmico via Asaas. Ledger de dupla entrada + fechamento de caixa cego. PostgreSQL único multi-tenant. |
 | **V1.1** | Integração oficial com a iFood Developer API (Webhook + polling de contingência de 5 min). |
 | **V1.5** | Local-First pleno: SQLite embarcado + sincronização bidirecional (CRDT / Last-Write-Wins). |
 | **V2.0** | Emissão fiscal eletrônica (NFC-e / SAT). |
@@ -78,11 +78,23 @@ bidirecional é adiado para a **V1.5**. A ponte de impressão Go opera desde a V
 
 ### ADR-Q2 — PSP e Pix dinâmico
 
-PSP candidato: **Efí Bank (ex-Gerencianet)** ou **Asaas** — decisão final pendente (ver §7).
-Geração de QR Code Pix **dinâmico por pedido** e webhooks de liquidação assinados. O **split do
-motoboy é lógico/interno ao Ledger** — sem split no nível do gateway, evitando aprovação de
-subcontas e KYC complexo. O valor entra integral na conta do restaurante; o Ledger calcula o
-saldo devedor do motoboy internamente.
+**PSP definido: Asaas.** A integração de pagamento cobre exclusivamente o **Fluxo B** — o
+cliente final do restaurante pagando o pedido, com o valor liquidado na conta do **dono do
+restaurante**. O **Fluxo A** (cobrança da assinatura mensal do SaaS aos lojistas) está **fora do
+escopo da V1.0** (ver §7).
+
+Cada restaurante (tenant) possui uma conta de recebimento própria no Asaas. O Asaas gera o QR
+Code **Pix dinâmico por pedido** e emite webhooks de liquidação assinados, que sustentam o
+bloqueio antifraude do despacho (RF-4.3). Como o Pix é um arranjo interoperável do Banco
+Central, o cliente paga o QR Code usando **qualquer banco ou carteira** — apenas o restaurante
+(recebedor) precisa de conta no PSP.
+
+O **split do motoboy é lógico/interno ao Ledger** — sem split no nível do gateway. O valor entra
+integral na conta do restaurante; o Ledger de dupla entrada calcula o saldo devedor do motoboy.
+
+> **Sub-decisão em aberto:** modelo de provisionamento da conta por restaurante — subconta
+> white-label criada via API pelo SaaS vs. conta Asaas própria do lojista conectada por
+> credencial. Ver §7.
 
 ### ADR-Q3 — Reconciliação de caixa
 
@@ -174,8 +186,9 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
 
 ### RF-4 — Pagamento Pix Dinâmico
 
-- RF-4.1 Geração de QR Code Pix dinâmico por pedido via PSP.
-- RF-4.2 Recebimento e verificação de webhook de liquidação assinado.
+- RF-4.1 Geração de QR Code Pix dinâmico por pedido via Asaas, liquidado na conta de
+  recebimento do próprio restaurante (tenant).
+- RF-4.2 Recebimento e verificação de webhook de liquidação assinado emitido pelo Asaas.
 - RF-4.3 Bloqueio do avanço do pedido para a etapa "Despacho" até a confirmação de liquidação.
 - RF-4.4 Middleware de idempotência por identificador único de evento.
 
@@ -215,6 +228,8 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
 ## 6. Diretrizes de Modelagem de Dados
 
 - Toda tabela crítica carrega `tenant_id` (UUID, indexado).
+- A entidade `tenant` referencia a conta de recebimento Asaas do restaurante (ex.:
+  `psp_account_id` e credenciais), usada para emitir as cobranças Pix dinâmicas dos pedidos.
 - `orders.id` e `products.id` são UUIDv4; `orders.daily_sequence` é o inteiro sequencial diário
   por loja.
 - `orders` e `products` incluem `fiscal_metadata` (JSONB) — reservado para a V2.0.
@@ -235,9 +250,12 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
 - Impressão térmica via Bluetooth.
 - WhatsApp Cloud API conversacional (bot).
 - Onboarding de cardápio assistido por IA (extração via Gemini) — a reavaliar após o MVP.
+- **Cobrança da assinatura do SaaS (Fluxo A)** — o recebimento da mensalidade dos lojistas
+  pelo operador do SaaS será especificado em etapa posterior.
 
 ### Pendências em aberto
 
-- **PSP definitivo:** decisão final entre **Efí Bank** e **Asaas** (ADR-Q2). Critérios de
-  desempate: confiabilidade dos webhooks de liquidação, custo por transação Pix e qualidade da
-  documentação técnica.
+- **Modelo de provisionamento da conta Asaas por restaurante** (ADR-Q2): subconta white-label
+  criada via API pelo SaaS — onboarding mais fluido para o lojista — vs. conta Asaas própria do
+  restaurante conectada por credencial — mais simples de construir e com menor responsabilidade
+  regulatória para o SaaS.

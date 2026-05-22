@@ -8,7 +8,7 @@
 - **Frontend POS:** React (Vite) empacotado como PWA de Alta Disponibilidade (Service Workers + Cache API); estado de sessão e buffers de impressão persistidos em IndexedDB.
 - **Local Print Bridge:** Proxy TCP/WebSocket embarcado escrito em Go (porta 9100; impressoras USB e Ethernet).
 - **Data Layer:** PostgreSQL (Cloud) multi-tenant, isolado logicamente por `tenant_id`; IndexedDB no cliente. SQLite embarcado e sincronização bidirecional planejados para a V1.5.
-- **Reconciliação:** Pix dinâmico por pedido via PSP, com Webhooks de liquidação assinados.
+- **Reconciliação:** Pix dinâmico por pedido via Asaas, com Webhooks de liquidação assinados.
 
 ## Architectural Rules (CRITICAL)
 
