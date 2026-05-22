@@ -196,12 +196,14 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
 
 ### RF-5 — Ledger & Fechamento de Caixa
 
-- RF-5.1 Ledger de dupla entrada com contas virtuais (`Caixa_Lojista`, `Caixa_Motoboy`,
-  `Caixa_Canal`).
+- RF-5.1 Ledger de dupla entrada com contas virtuais: `Caixa_Lojista`, `Caixa_Canal` e uma
+  conta dedicada por motoboy cadastrado.
 - RF-5.2 Lançamento manual de recebimentos em dinheiro e maquininha externa.
 - RF-5.3 Acúmulo em tempo real das taxas de entrega por motoboy.
 - RF-5.4 Fechamento de caixa cego, com relatório de divergências.
 - RF-5.5 Ledger append-only — estornos feitos por novo lançamento, nunca por sobrescrita.
+- RF-5.6 Cadastro de motoboys (nome, telefone, status ativo), base do acerto individual de
+  taxas de entrega.
 
 ### RF-6 — Resiliência & Diagnóstico
 

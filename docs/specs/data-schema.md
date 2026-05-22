@@ -27,7 +27,7 @@ vazamentos horizontais (RNF-1 / ADR-Q7).
 
 ---
 
-## 1. Tenants & Autenticação
+## 1. Tenants, Usuários & Motoboys
 
 ```sql
 -- Conta principal do restaurante (um registro por lojista)
@@ -58,6 +58,18 @@ CREATE TABLE users (
   UNIQUE (tenant_id, email)
 );
 CREATE INDEX idx_users_tenant ON users(tenant_id);
+
+-- Motoboys de entrega — base do acerto de taxa por rota (RF-5.3 / ADR-Q3)
+CREATE TABLE couriers (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  phone       TEXT,
+  is_active   BOOLEAN NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_couriers_tenant ON couriers(tenant_id);
 ```
 
 ---
@@ -153,6 +165,8 @@ CREATE TABLE orders (
   customer_name    TEXT,
   customer_phone   TEXT,
   delivery_address TEXT,
+  courier_id         UUID REFERENCES couriers(id),  -- motoboy designado no despacho (RF-5.3)
+  delivery_fee_cents INT NOT NULL DEFAULT 0,         -- taxa de entrega; base do acerto do motoboy
   notes            TEXT,
   total_cents      INT NOT NULL CHECK (total_cents >= 0),
   payment_method   TEXT NOT NULL DEFAULT 'pix'
@@ -171,6 +185,7 @@ CREATE TABLE orders (
 CREATE INDEX idx_orders_tenant        ON orders(tenant_id);
 CREATE INDEX idx_orders_tenant_status ON orders(tenant_id, status);
 CREATE INDEX idx_orders_tenant_date   ON orders(tenant_id, created_at);
+CREATE INDEX idx_orders_courier       ON orders(courier_id);
 -- Unicidade do sequencial diário por loja
 CREATE UNIQUE INDEX idx_orders_daily_seq
   ON orders(tenant_id, daily_sequence, (created_at::date));
@@ -240,12 +255,14 @@ CREATE INDEX idx_pix_charges_order    ON pix_charges(order_id);
 
 ```sql
 -- Contas virtuais do Ledger por tenant
--- Contas padrão provisionadas no onboarding: Caixa_Lojista, Caixa_Motoboy, Caixa_Canal
+-- Contas fixas provisionadas no onboarding: Caixa_Lojista, Caixa_Canal.
+-- Cada motoboy cadastrado recebe uma conta própria (courier_id preenchido) — RF-5.3.
 CREATE TABLE ledger_accounts (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,   -- 'Caixa_Lojista' | 'Caixa_Motoboy' | 'Caixa_Canal'
+  name        TEXT NOT NULL,   -- 'Caixa_Lojista' | 'Caixa_Canal' | 'Caixa_Motoboy:<nome>'
   type        TEXT NOT NULL CHECK (type IN ('asset', 'liability', 'equity')),
+  courier_id  UUID REFERENCES couriers(id),  -- preenchido apenas nas contas de motoboy
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (tenant_id, name)
 );
@@ -348,3 +365,4 @@ CREATE INDEX idx_print_jobs_tenant_status ON print_jobs(tenant_id, status);
 | Despacho bloqueado até `pix_charges.status = 'paid'` | Middleware de transição de estado (RF-4.3) |
 | Combo de valor zerado rejeitado | Validação Zod no backend (ADR-Q9) |
 | Estorno = novo lançamento com `reversal_of` preenchido | Convenção do Ledger (RF-5.5) |
+| Taxa de entrega creditada à conta de Ledger do motoboy | Lançamento ao confirmar entrega (RF-5.3) |
