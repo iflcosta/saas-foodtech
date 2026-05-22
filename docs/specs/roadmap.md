@@ -58,12 +58,9 @@ Nada implementado — a Fase 4 ainda não começou.
 
 ## 4. Próximos Passos
 
-1. **Decidir o roteamento setorial de impressão** — adicionar um campo de fila ao cardápio
-   (`categories` / `products`). Lacuna encontrada ao escrever `api-contracts.md` (ver §11
-   do doc).
-2. Escrever `design-system.md` com o agente Frontend/UX.
-3. Revisar e fechar todas as specs da Fase 2 em conjunto.
-4. Iniciar a Fase 3 — scaffolding do monorepo.
+1. Escrever `design-system.md` com o agente Frontend/UX.
+2. Revisar e fechar todas as specs da Fase 2 em conjunto.
+3. Iniciar a Fase 3 — scaffolding do monorepo.
 
 ---
 
@@ -88,6 +85,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-22 | Roteamento setorial de impressão (RF-2.2): adicionado `categories.print_queue` (`kitchen` / `bar`); o item herda a fila da categoria e a comanda `dispatch` é gerada por pedido. Nível de categoria escolhido pelo menor atrito de onboarding. Lacuna encontrada ao escrever `api-contracts.md`. |
 | 2026-05-22 | Escopo do `api-contracts.md` confirmado: auth, onboarding, cardápio (admin + público), pedidos, WebSocket do PDV, Pix + webhook, Ledger/caixa, motoboys, fila de impressão, validação Zod. O protocolo do WebSocket local ESC/POS fica para um doc próprio. |
 | 2026-05-22 | Criada a tabela `couriers` (+ `orders.courier_id` / `delivery_fee_cents` + conta de Ledger por motoboy), fechando lacuna de RF-5.3 — o schema não rastreava a taxa por motoboy. Adicionado RF-5.6. |
 | 2026-05-22 | Specs detalhadas organizadas **por camada** (`data-schema.md`, `api-contracts.md`, `design-system.md`), não por feature; cada uma planejada e fechada individualmente. |

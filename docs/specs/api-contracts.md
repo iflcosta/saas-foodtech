@@ -118,6 +118,9 @@ Validação de produto: `base_price_cents >= 0`. Um produto combo (composto por 
 modificadores obrigatórios) tem o preço efetivo recalculado e **rejeitado se resultar em
 zero** (`422 validation_error`) — ADR-Q9.
 
+A categoria carrega `print_queue` (`kitchen` | `bar`), que define a fila de impressão dos
+itens dela no aceite do pedido (RF-2.2).
+
 ---
 
 ## 5. Cardápio — Público
@@ -199,8 +202,8 @@ O `tracking_token` alimenta o link de acompanhamento incluído no texto do Whats
 ### POST /v1/orders/:id/accept
 
 Aceite em clique único (RF-1.4): `pending → confirmed` e enfileira os `print_jobs`
-setoriais (`kitchen` / `bar` / `dispatch`). O roteamento de cada item para `kitchen` ou
-`bar` depende do campo de fila do cardápio — ver a dependência em aberto na §11. Idempotente;
+setoriais — o roteamento de cada item para `kitchen` ou `bar` segue o `print_queue` da
+categoria do produto (§11) e a comanda `dispatch` é gerada uma vez por pedido. Idempotente;
 `409 invalid_transition` se o pedido não estiver em `pending`.
 
 ### POST /v1/orders/:id/transition
@@ -319,9 +322,9 @@ pendentes e os envia às impressoras pelo WebSocket local — protocolo no docum
 `{ "status": "failed", "error": "..." }`; em falha, incrementa `attempts` e mantém o job
 elegível para reenvio quando a conexão se restabelecer (RF-2.4).
 
-> **Dependência em aberto:** o roteamento de um item para a fila `kitchen` ou `bar` (RF-2.2)
-> exige um campo de fila no cardápio, hoje ausente em `data-schema.md` (as tabelas
-> `categories`/`products` não têm essa coluna). Decisão pendente — ver `roadmap.md` §4.
+**Roteamento setorial (RF-2.2):** cada item vai para a fila `kitchen` ou `bar` conforme o
+`print_queue` da categoria do produto; a comanda `dispatch` é gerada uma vez por pedido. O
+aceite (§6) agrupa os itens por fila e emite um `print_job` para cada fila com conteúdo.
 
 ---
 

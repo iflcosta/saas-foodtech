@@ -79,13 +79,15 @@ CREATE INDEX idx_couriers_tenant ON couriers(tenant_id);
 ```sql
 -- Categorias de produto (ex.: Hambúrgueres, Pizzas, Bebidas)
 CREATE TABLE categories (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
-  sort_order  INT NOT NULL DEFAULT 0,
-  deleted_at  TIMESTAMPTZ,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id    UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  name         TEXT NOT NULL,
+  print_queue  TEXT NOT NULL DEFAULT 'kitchen'
+                 CHECK (print_queue IN ('kitchen', 'bar')), -- fila setorial dos itens (RF-2.2)
+  sort_order   INT NOT NULL DEFAULT 0,
+  deleted_at   TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_categories_tenant ON categories(tenant_id);
 
@@ -366,3 +368,4 @@ CREATE INDEX idx_print_jobs_tenant_status ON print_jobs(tenant_id, status);
 | Combo de valor zerado rejeitado | Validação Zod no backend (ADR-Q9) |
 | Estorno = novo lançamento com `reversal_of` preenchido | Convenção do Ledger (RF-5.5) |
 | Taxa de entrega creditada à conta de Ledger do motoboy | Lançamento ao confirmar entrega (RF-5.3) |
+| Item roteado para a fila de cozinha/bar pela categoria | `categories.print_queue` no aceite (RF-2.2) |
