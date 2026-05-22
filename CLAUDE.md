@@ -1,6 +1,7 @@
 # 🚀 SaaS Foodtech POS & Delivery - Project Constitution
 
 > Escopo vigente: **V1.0 (MVP)**. Roadmap completo, ADRs e requisitos em `docs/specs/spec.md`.
+> **Estado atual e próximos passos:** `docs/specs/roadmap.md` — consulte antes de iniciar qualquer tarefa.
 
 ## Tech Stack & Architecture
 
