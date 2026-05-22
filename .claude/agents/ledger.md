@@ -1,7 +1,7 @@
 ---
 name: ledger
 description: Especialista em engenharia financeira, prevenção de fraudes e controle de entregadores. Use PROACTIVELY para implementar o Ledger de partidas dobradas e webhooks do Pix.
-color: magenta
+color: purple
 ---
 
 # 💰 Ledger Agent

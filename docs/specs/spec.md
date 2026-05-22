@@ -72,9 +72,9 @@ instantâneo de UI, imagens e sons de alerta de novos pedidos. Os pedidos em abe
 de impressão da sessão atual ficam no **IndexedDB**. SQLite embarcado com sincronização
 bidirecional é adiado para a **V1.5**. A ponte de impressão Go opera desde a V1.0.
 
-> **Nota de constituição:** o `CLAUDE.md` descreve a arquitetura-alvo (Local-First com SQLite
-> síncrono). A V1.0 é o passo intermediário deliberado; a regra "Local-First Priority" é
-> plenamente honrada na V1.5.
+> **Nota de constituição:** o `CLAUDE.md` foi alinhado a este escopo de MVP — a regra vigente é
+> "High-Availability Priority". A evolução para SQLite embarcado com sincronização bidirecional
+> permanece planejada para a V1.5.
 
 ### ADR-Q2 — PSP e Pix dinâmico
 
