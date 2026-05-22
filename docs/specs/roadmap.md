@@ -34,7 +34,7 @@ detalhando os contratos por camada antes de escrever código de aplicação.
 | `spec.md` | Master: visão, roadmap, ADRs Q1–Q10, RF/RNF | Estável |
 | `data-schema.md` | Schema PostgreSQL — 17 tabelas | Escrito — revisão pendente |
 | `api-contracts.md` | Endpoints REST + WebSocket + schemas Zod | Escrito — revisão pendente |
-| `design-system.md` | Design brief para o Claude Design | Planejado |
+| `design-system.md` | Design brief para o Claude Design | Escrito — revisão pendente |
 
 ---
 
@@ -58,9 +58,10 @@ Nada implementado — a Fase 4 ainda não começou.
 
 ## 4. Próximos Passos
 
-1. Escrever `design-system.md` com o agente Frontend/UX.
-2. Revisar e fechar todas as specs da Fase 2 em conjunto.
-3. Iniciar a Fase 3 — scaffolding do monorepo.
+1. Revisar e fechar as três specs da Fase 2 em conjunto — inclui resolver as 4 pendências
+   de `design-system.md` §8 (acessibilidade sem RNF, i18n, comportamento do alerta sonoro,
+   estado vazio da triagem).
+2. Iniciar a Fase 3 — scaffolding do monorepo.
 
 ---
 
@@ -85,6 +86,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-22 | `design-system.md` escrito — design brief versionado (tokens, componentes-chave, telas, estados de resiliência, handoff com o Claude Design). 4 lacunas de UI sem requisito (acessibilidade, i18n, repetição do alerta sonoro, estado vazio da triagem) registradas no §8 do doc para decisão na revisão da Fase 2, sem criar RF novo. |
 | 2026-05-22 | Roteamento setorial de impressão (RF-2.2): adicionado `categories.print_queue` (`kitchen` / `bar`); o item herda a fila da categoria e a comanda `dispatch` é gerada por pedido. Nível de categoria escolhido pelo menor atrito de onboarding. Lacuna encontrada ao escrever `api-contracts.md`. |
 | 2026-05-22 | Escopo do `api-contracts.md` confirmado: auth, onboarding, cardápio (admin + público), pedidos, WebSocket do PDV, Pix + webhook, Ledger/caixa, motoboys, fila de impressão, validação Zod. O protocolo do WebSocket local ESC/POS fica para um doc próprio. |
 | 2026-05-22 | Criada a tabela `couriers` (+ `orders.courier_id` / `delivery_fee_cents` + conta de Ledger por motoboy), fechando lacuna de RF-5.3 — o schema não rastreava a taxa por motoboy. Adicionado RF-5.6. |
