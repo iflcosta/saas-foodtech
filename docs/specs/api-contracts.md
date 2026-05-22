@@ -1,6 +1,6 @@
 # Especificação Técnica — Contratos de API (V1.0)
 
-- **Status:** Em detalhamento técnico
+- **Status:** Estável (V1.0)
 - **Documento mestre:** `docs/specs/spec.md`
 - **Schema referenciado:** `docs/specs/data-schema.md`
 - **Escopo:** V1.0 (MVP)

@@ -1,6 +1,6 @@
 # Especificação Técnica — Schema de Dados (PostgreSQL V1.0)
 
-- **Status:** Em detalhamento técnico
+- **Status:** Estável (V1.0)
 - **Documento mestre:** `docs/specs/spec.md` (§6)
 - **Escopo:** V1.0 (MVP)
 - **Última atualização:** 2026-05-22

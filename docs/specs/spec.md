@@ -167,6 +167,7 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
 - RF-1.2 Geração do pedido como texto estruturado + redirecionamento para o WhatsApp do lojista.
 - RF-1.3 Painel do operador com tela de triagem única, atualizada em tempo real via WebSocket.
 - RF-1.4 Aceite e impressão do pedido em clique único (Single-Click Acceptance).
+- RF-1.5 Alerta sonoro de novo pedido repetido até o aceite, com controle de mudo no PDV.
 
 ### RF-2 — Motor de Impressão ESC/POS
 
@@ -226,6 +227,8 @@ sobrescritos; correções ocorrem exclusivamente por novos lançamentos de estor
   segmentado por camada de assinatura.
 - RNF-6 **Qualidade de código** — TypeScript estrito; validação de schema com Zod em todas as
   fronteiras de entrada de dados.
+- RNF-7 **Acessibilidade** — contraste WCAG AA, foco visível em todo elemento interativo,
+  cor nunca como único canal de significado. Detalhamento em `design-system.md` §2.6.
 
 ---
 
@@ -263,6 +266,8 @@ Diretrizes que regem o modelo:
 - **Pagamento com cartão no checkout digital** — o RF-4 do MVP processa apenas Pix dinâmico via
   Asaas; cartão de crédito online é expansão pós-MVP, na mesma conta Asaas. O cartão presencial
   na entrega permanece suportado por lançamento manual no Ledger (ADR-Q3).
+- **Internacionalização (i18n / multi-idioma)** — interface em pt-BR e moeda BRL apenas;
+  coerente com o público da V1.0 (interior do Brasil, MEI — §1.2).
 
 ### Pendências em aberto
 

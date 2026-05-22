@@ -1,7 +1,7 @@
 # Especificação Técnica — Design System & Handoff Visual (V1.0)
 
-- **Status:** Em detalhamento técnico
-- **Documento mestre:** `docs/specs/spec.md` (RF-1, RF-2.3, RF-3, RF-5.4, RNF-3)
+- **Status:** Estável (V1.0)
+- **Documento mestre:** `docs/specs/spec.md` (RF-1, RF-2.3, RF-3, RF-5.4, RNF-3, RNF-7)
 - **Schema referenciado:** `docs/specs/data-schema.md`
 - **Contratos referenciados:** `docs/specs/api-contracts.md`
 - **Escopo:** V1.0 (MVP)
@@ -134,7 +134,7 @@ Movimento é funcional: confirma toque e chama atenção para pedido novo. Sem a
 puramente decorativa (não-meta §1). `motion.pulse` é a única animação contínua e respeita
 `prefers-reduced-motion` (degrada para destaque estático de cor).
 
-### 2.6 Acessibilidade — invariantes de token
+### 2.6 Acessibilidade — invariantes de token (RNF-7)
 
 - Contraste mínimo **4.5:1** para texto e **3:1** para ícones/bordas de estado (WCAG AA);
   os pares de cor desta seção já satisfazem o limite.
@@ -263,6 +263,10 @@ deveria conseguir fazer sem pensar (P1).
 - **Ação primária:** o `AcceptButton` no card do pedido novo (RF-1.4).
 - **Tempo real:** atualiza por WebSocket (`order.created`, `order.updated` — `api-contracts.md`
   §7); `order.created` dispara o alerta sonoro (§5.2).
+- **Estado vazio:** sem pedidos abertos (início de turno, hora morta), a tela exibe um bloco
+  centralizado — ícone neutro + mensagem curta ("Nenhum pedido aberto. Tudo certo por aqui.")
+  — e o `ConnectionStatus` permanece visível na barra superior. Comunica calma, não ausência
+  de função (reforça P5).
 
 ### 4.2 Cardápio Digital — Cliente (RF-1.1)
 
@@ -330,7 +334,7 @@ o gerenciamento desses estados pertencem à camada Local-First; esta seção def
   desaparecem. Um `Toast` de sucesso confirma quando uma fila relevante esvazia.
 - **Princípio:** offline é estado normal, comunicado com calma (P5) — cinza, nunca vermelho.
 
-### 5.2 Alerta Sonoro de Novo Pedido
+### 5.2 Alerta Sonoro de Novo Pedido (RF-1.5)
 
 - **Gatilho:** evento WebSocket `order.created` (`api-contracts.md` §7).
 - **Som:** toque de alerta curto e distinto, servido do cache do Service Worker (RF-6.1) —
@@ -367,6 +371,7 @@ Rastreabilidade entre requisitos de UI e os artefatos deste documento.
 | RF-1.1 Cardápio digital | §4.2 |
 | RF-1.3 Triagem em tempo real | §3.2, §4.1, §5.2 |
 | RF-1.4 Aceite em clique único | §3.1 |
+| RF-1.5 Alerta sonoro repetido | §5.2 |
 | RF-2.2 Roteamento setorial | §3.1 (enfileiramento no aceite) |
 | RF-2.3 Destaque de modificadores | §3.2 (eco em tela do impresso) |
 | RF-2.4 Fila de impressão persistente | §5.3 |
@@ -377,6 +382,7 @@ Rastreabilidade entre requisitos de UI e os artefatos deste documento.
 | RF-5.4 Fechamento de caixa cego | §3.3, §4.4 |
 | RF-6.1/6.2 Resiliência PWA | §3.4, §5.1, §5.2 |
 | RNF-3 Resiliência de rede (UI) | §3.4, §5 |
+| RNF-7 Acessibilidade | §2.6 |
 
 ---
 
@@ -423,29 +429,3 @@ Design é re-executável de forma determinística a partir desta spec, sem deriv
 - Identidade visual por tenant — não-meta da V1.0 (§1); o PWA usa um único tema.
 - Telas de impressão de navegador — **não existem**: toda impressão é ESC/POS via WebSocket
   local, sem diálogo nativo (CLAUDE.md, "Zero Raw Printing Dialogs").
-
----
-
-## 8. Lacunas / Pendências em Aberto
-
-Necessidades de UI levantadas ao escrever este brief que **não têm requisito (RF-/RNF-) que
-as sustente**. Seguindo a convenção das specs irmãs (lacunas de `couriers` e `print_queue`
-registradas para decisão do dono do projeto), são listadas aqui — **sem criar RF novo**.
-
-- **Acessibilidade não tem RNF próprio.** §2.6 define invariantes de contraste, foco e
-  redundância de cor, mas nenhum RF/RNF do `spec.md` exige acessibilidade explicitamente.
-  Sustentam o público de baixa literacia digital, mas o status formal (meta de produto vs.
-  diretriz de design) precisa de decisão.
-- **Internacionalização não está decidida.** Os tokens fixam pt-BR e moeda BRL no texto da
-  interface. Nenhuma spec menciona i18n; coerente com o público (`spec.md` §1.2), mas
-  registrado caso a estratégia de produto mude.
-- **Comportamento sonoro do alerta sem requisito.** RF-6.1 garante o **cache** do som de
-  alerta, mas a **repetição até o aceite** (§5.2) e o controle de silenciar são decisão de
-  design sem RF — o `spec.md` não descreve o comportamento do som além do cache. O intervalo
-  de repetição e a política de mudo precisam de aval — possível candidato a RF-1.5 / RF-6.4.
-- **Estado vazio da triagem não especificado.** A tela de triagem (§4.1) precisa de um
-  estado para "nenhum pedido aberto" (início de turno, hora morta). É decisão de design
-  menor, registrada para consistência; sem impacto de requisito.
-
-Nenhuma dessas lacunas bloqueia o handoff com o Claude Design (§7) — todas são refinamentos
-a confirmar pelo dono do projeto antes de fechar a Fase 2.

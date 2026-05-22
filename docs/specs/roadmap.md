@@ -14,13 +14,13 @@
 
 ## 1. Fase Atual
 
-**Fase 2 — Especificação técnica detalhada.** A spec fundacional está fechada; estamos
-detalhando os contratos por camada antes de escrever código de aplicação.
+**Fase 2 concluída.** As três specs detalhadas estão estáveis. Próximo: iniciar a Fase 3 —
+scaffolding do monorepo.
 
 | # | Fase | Status |
 |---|---|---|
 | 1 | Especificação fundacional (`spec.md`) | Concluída |
-| 2 | Especificação técnica detalhada | Em andamento |
+| 2 | Especificação técnica detalhada | Concluída |
 | 3 | Scaffolding & infraestrutura | Pendente |
 | 4 | Implementação da V1.0 | Pendente |
 | 5 | Lançamento do MVP | Pendente |
@@ -31,10 +31,10 @@ detalhando os contratos por camada antes de escrever código de aplicação.
 
 | Documento | Conteúdo | Status |
 |---|---|---|
-| `spec.md` | Master: visão, roadmap, ADRs Q1–Q10, RF/RNF | Estável |
-| `data-schema.md` | Schema PostgreSQL — 17 tabelas | Escrito — revisão pendente |
-| `api-contracts.md` | Endpoints REST + WebSocket + schemas Zod | Escrito — revisão pendente |
-| `design-system.md` | Design brief para o Claude Design | Escrito — revisão pendente |
+| `spec.md` | Master: visão, roadmap, ADRs Q1–Q10, RF/RNF | Estável (V1.0) |
+| `data-schema.md` | Schema PostgreSQL — 17 tabelas | Estável (V1.0) |
+| `api-contracts.md` | Endpoints REST + WebSocket + schemas Zod | Estável (V1.0) |
+| `design-system.md` | Design brief para o Claude Design | Estável (V1.0) |
 
 ---
 
@@ -58,10 +58,7 @@ Nada implementado — a Fase 4 ainda não começou.
 
 ## 4. Próximos Passos
 
-1. Revisar e fechar as três specs da Fase 2 em conjunto — inclui resolver as 4 pendências
-   de `design-system.md` §8 (acessibilidade sem RNF, i18n, comportamento do alerta sonoro,
-   estado vazio da triagem).
-2. Iniciar a Fase 3 — scaffolding do monorepo.
+1. Iniciar a Fase 3 — scaffolding do monorepo (Node.js/Fastify + React/Vite PWA + ponte Go).
 
 ---
 
@@ -86,6 +83,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-22 | **Fase 2 fechada.** Revisão conjunta das três specs detalhadas; as 4 lacunas do `design-system.md` §8 foram resolvidas: (1) acessibilidade promovida a **RNF-7** no `spec.md`; (2) repetição do alerta sonoro elevada a **RF-1.5**; (3) i18n declarada fora de escopo da V1.0 (`spec.md` §7); (4) estado vazio da triagem descrito no `design-system.md` §4.1. §8 do `design-system.md` removido. As três specs ficam em **Estável (V1.0)**. |
 | 2026-05-22 | `design-system.md` escrito — design brief versionado (tokens, componentes-chave, telas, estados de resiliência, handoff com o Claude Design). 4 lacunas de UI sem requisito (acessibilidade, i18n, repetição do alerta sonoro, estado vazio da triagem) registradas no §8 do doc para decisão na revisão da Fase 2, sem criar RF novo. |
 | 2026-05-22 | Roteamento setorial de impressão (RF-2.2): adicionado `categories.print_queue` (`kitchen` / `bar`); o item herda a fila da categoria e a comanda `dispatch` é gerada por pedido. Nível de categoria escolhido pelo menor atrito de onboarding. Lacuna encontrada ao escrever `api-contracts.md`. |
 | 2026-05-22 | Escopo do `api-contracts.md` confirmado: auth, onboarding, cardápio (admin + público), pedidos, WebSocket do PDV, Pix + webhook, Ledger/caixa, motoboys, fila de impressão, validação Zod. O protocolo do WebSocket local ESC/POS fica para um doc próprio. |
