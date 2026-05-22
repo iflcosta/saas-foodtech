@@ -8,7 +8,7 @@
  *  - `reversal_of` é auto-referência: estornos apontam para o lançamento original.
  *  - Sem `updated_at`: lançamentos são imutáveis por definição.
  */
-import { sql, type AnyPgColumn } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   bigserial,
@@ -20,6 +20,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 import { couriers, tenants } from './tenants.js';
 import { orders } from './orders.js';

@@ -14,15 +14,15 @@
 
 ## 1. Fase Atual
 
-**Fase 3 em andamento.** Esqueleto do monorepo escrito — root config + 3 apps + 2 packages + CI.
-Falta validar localmente (`npm install`, typecheck, lint, test, build do bridge Go) e então
-fechar para entrar na Fase 4 (implementação da V1.0).
+**Fase 3 concluída.** Esqueleto do monorepo escrito e validado localmente
+(`npm install`, `npm run typecheck`, `npm run lint`, `npm run test` — 3 testes verdes).
+Próximo: iniciar a Fase 4 — implementação da V1.0.
 
 | # | Fase | Status |
 |---|---|---|
 | 1 | Especificação fundacional (`spec.md`) | Concluída |
 | 2 | Especificação técnica detalhada | Concluída |
-| 3 | Scaffolding & infraestrutura | Em andamento |
+| 3 | Scaffolding & infraestrutura | Concluída |
 | 4 | Implementação da V1.0 | Pendente |
 | 5 | Lançamento do MVP | Pendente |
 
@@ -45,7 +45,7 @@ Esqueleto da Fase 3 escrito; nenhum requisito funcional implementado ainda.
 
 | Área | Componente | Status |
 |---|---|---|
-| Fundação | Monorepo + npm workspaces + TS estrito + CI | Esqueleto escrito |
+| Fundação | Monorepo + npm workspaces + TS estrito + CI | Esqueleto validado (install/typecheck/lint/test ok) |
 | Fundação | Schema Drizzle (`packages/db` — 17 tabelas) | Modelado — `db:push` ainda não executado |
 | Fundação | Validadores Zod (`packages/shared`) | Esqueleto escrito |
 | Fundação | Auth JWT + middleware de tenant | Não iniciado |
@@ -60,11 +60,10 @@ Esqueleto da Fase 3 escrito; nenhum requisito funcional implementado ainda.
 
 ## 4. Próximos Passos
 
-1. Validar localmente o esqueleto da Fase 3: `npm install`, `npm run typecheck`, `npm run lint`,
-   `npm run test`, `go build` em `apps/bridge`. Corrigir o que aparecer e marcar a Fase 3 como
-   Concluída.
-2. Iniciar a Fase 4 — implementação da V1.0, começando por RF-1 (ingestão de pedidos) e a
-   fundação de auth/tenant.
+1. Iniciar a Fase 4 — implementação da V1.0, começando pela fundação (auth JWT + middleware de
+   tenant + `db:push` contra um Postgres real) e por RF-1 (ingestão de pedidos).
+2. Revisar as 9 vulnerabilidades transitivas (8 moderadas, 1 alta) reportadas no `npm install`
+   antes de avançar muito na Fase 4.
 
 ---
 
@@ -89,6 +88,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-22 | **Fase 3 concluída.** Esqueleto validado localmente: `npm install` (632 pacotes, 54s), `npm run typecheck`, `npm run lint`, `npm run test` (3 verdes — `apps/api` `/health`, `apps/pos` `ConnectionStatus`, `apps/bridge` `go test`). Correções no caminho: (1) `packages/db/tsconfig.json` deixou de incluir `drizzle.config.ts` (conflitava com `rootDir: "./src"`); (2) `packages/db/src/schema/ledger.ts` agora importa `AnyPgColumn` de `drizzle-orm/pg-core` (mudou de pacote na 0.36); (3) script `test` da raiz passa a delegar para os workspaces (`--workspaces --if-present`) para cada um carregar sua própria config do Vitest (apps/pos precisa de jsdom). Anotado: 9 vulnerabilidades transitivas (8 mod, 1 alta) — listadas no §4 para revisar antes da Fase 4. |
 | 2026-05-22 | **Fase 3 iniciada.** Esqueleto do monorepo escrito (root config + `apps/{api,pos,bridge}` + `packages/{db,shared}` + GitHub Actions). Stack escolhida: npm workspaces + TypeScript estrito + Fastify v5 + React 18/Vite 5/`vite-plugin-pwa` + Go 1.22 com `github.com/coder/websocket` + Drizzle ORM/PostgreSQL + Zod + Vitest + ESLint flat + Prettier. **Drizzle** sobre Prisma pelo footprint baixo em VPS 1c/1GB (RNF-2) e schema TS espelho do `data-schema.md`; **npm workspaces** sobre pnpm por alinhamento com `CLAUDE.md`. |
 | 2026-05-22 | Lacuna de spec encontrada no scaffolding: `POST /v1/orders/:id/pix-charge` em `api-contracts.md §8` não define corpo de requisição. Modelado em `packages/shared` com `expires_in_seconds` opcional (`createPixChargeSchema`) — resolver junto da implementação real do Pix (Fase 4) ou voltar para a `api-contracts.md` antes. |
 | 2026-05-22 | **Fase 2 fechada.** Revisão conjunta das três specs detalhadas; as 4 lacunas do `design-system.md` §8 foram resolvidas: (1) acessibilidade promovida a **RNF-7** no `spec.md`; (2) repetição do alerta sonoro elevada a **RF-1.5**; (3) i18n declarada fora de escopo da V1.0 (`spec.md` §7); (4) estado vazio da triagem descrito no `design-system.md` §4.1. §8 do `design-system.md` removido. As três specs ficam em **Estável (V1.0)**. |
