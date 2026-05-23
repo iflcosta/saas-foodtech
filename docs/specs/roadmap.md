@@ -62,8 +62,10 @@ Esqueleto da Fase 3 escrito; nenhum requisito funcional implementado ainda.
 
 1. Iniciar a Fase 4 — implementação da V1.0, começando pela fundação (auth JWT + middleware de
    tenant + `db:push` contra um Postgres real) e por RF-1 (ingestão de pedidos).
-2. Revisar as 9 vulnerabilidades transitivas (8 moderadas, 1 alta) reportadas no `npm install`
-   antes de avançar muito na Fase 4.
+2. **Pré-lançamento (hardening):** tratar as 8 vulnerabilidades moderadas restantes na cadeia
+   `esbuild → vite / vitest / drizzle-kit` — fix exige subir Vite 5 → 8 (3 majors, quebraria
+   `vite-plugin-pwa` e a integração com `vitest 2.x`). Risco é apenas dev/CI; não bloqueia a
+   Fase 4.
 
 ---
 
@@ -88,6 +90,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-22 | **Drizzle ORM bumpado** para `^0.45.2` (+ `drizzle-kit ^0.31.10`), fechando a CVE alta de SQL injection por identificadores mal escapados (GHSA-gpj5-g38j-94v9). Schema DSL é estável entre versões — typecheck e testes seguem verdes; a quebra de API da 0.45 é só na camada de queries, ainda não escrita. As 8 CVEs moderadas restantes ficam na cadeia `esbuild → vite / vitest / drizzle-kit` (dev/CI apenas): fix passa por subir Vite 5 → 8 (3 majors), risco contido em desenvolvimento. Adiado para hardening pré-MVP — registrado no §4. |
 | 2026-05-22 | **Fase 3 concluída.** Esqueleto validado localmente: `npm install` (632 pacotes, 54s), `npm run typecheck`, `npm run lint`, `npm run test` (3 verdes — `apps/api` `/health`, `apps/pos` `ConnectionStatus`, `apps/bridge` `go test`). Correções no caminho: (1) `packages/db/tsconfig.json` deixou de incluir `drizzle.config.ts` (conflitava com `rootDir: "./src"`); (2) `packages/db/src/schema/ledger.ts` agora importa `AnyPgColumn` de `drizzle-orm/pg-core` (mudou de pacote na 0.36); (3) script `test` da raiz passa a delegar para os workspaces (`--workspaces --if-present`) para cada um carregar sua própria config do Vitest (apps/pos precisa de jsdom). Anotado: 9 vulnerabilidades transitivas (8 mod, 1 alta) — listadas no §4 para revisar antes da Fase 4. |
 | 2026-05-22 | **Fase 3 iniciada.** Esqueleto do monorepo escrito (root config + `apps/{api,pos,bridge}` + `packages/{db,shared}` + GitHub Actions). Stack escolhida: npm workspaces + TypeScript estrito + Fastify v5 + React 18/Vite 5/`vite-plugin-pwa` + Go 1.22 com `github.com/coder/websocket` + Drizzle ORM/PostgreSQL + Zod + Vitest + ESLint flat + Prettier. **Drizzle** sobre Prisma pelo footprint baixo em VPS 1c/1GB (RNF-2) e schema TS espelho do `data-schema.md`; **npm workspaces** sobre pnpm por alinhamento com `CLAUDE.md`. |
 | 2026-05-22 | Lacuna de spec encontrada no scaffolding: `POST /v1/orders/:id/pix-charge` em `api-contracts.md §8` não define corpo de requisição. Modelado em `packages/shared` com `expires_in_seconds` opcional (`createPixChargeSchema`) — resolver junto da implementação real do Pix (Fase 4) ou voltar para a `api-contracts.md` antes. |
