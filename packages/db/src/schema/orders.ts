@@ -66,11 +66,13 @@ export const orders = pgTable(
     index('idx_orders_tenant_status').on(table.tenantId, table.status),
     index('idx_orders_tenant_date').on(table.tenantId, table.createdAt),
     index('idx_orders_courier').on(table.courierId),
-    // Unicidade do sequencial diário por loja
+    // Unicidade do sequencial diário por loja.
+    // O dia é em `America/Sao_Paulo` (pt-BR/BRL apenas, spec.md §7); o cast
+    // direto de `timestamptz` é STABLE — Postgres rejeita em índice btree.
     uniqueIndex('idx_orders_daily_seq').on(
       table.tenantId,
       table.dailySequence,
-      sql`(${table.createdAt}::date)`,
+      sql`((${table.createdAt} AT TIME ZONE 'America/Sao_Paulo')::date)`,
     ),
     check(
       'orders_status_check',

@@ -1,7 +1,7 @@
 # Roadmap & Estado do Projeto — SaaS Foodtech POS & Delivery
 
 - **Status:** Documento vivo — atualizado a cada avanço
-- **Última atualização:** 2026-05-22
+- **Última atualização:** 2026-05-24
 - **Função:** Rastrear *onde o projeto está agora* e *o que ainda falta produzir*.
   Complementa o `spec.md`, que descreve o destino (visão, ADRs, requisitos), mas não a
   posição atual.
@@ -14,16 +14,19 @@
 
 ## 1. Fase Atual
 
-**Fase 3 concluída.** Esqueleto do monorepo escrito e validado localmente
-(`npm install`, `npm run typecheck`, `npm run lint`, `npm run test` — 3 testes verdes).
-Próximo: iniciar a Fase 4 — implementação da V1.0.
+**Fase 4 em andamento — fundação aplicada.** `docker-compose.yml` (Postgres 16) +
+`db:push` aplicando as 17 tabelas no DB real + auth JWT + middleware de tenant
+(plugin Fastify decora `req.auth = { userId, tenantId, role }`) + RBAC por papel +
+`POST /v1/auth/login` com bcryptjs. Validado com 18 testes verdes (12 unit + 6
+integração contra Postgres real) e smoke test HTTP. CI ganhou serviço Postgres para
+rodar a suíte de integração. Próximo: RF-1 (ingestão de pedidos).
 
 | # | Fase | Status |
 |---|---|---|
 | 1 | Especificação fundacional (`spec.md`) | Concluída |
 | 2 | Especificação técnica detalhada | Concluída |
 | 3 | Scaffolding & infraestrutura | Concluída |
-| 4 | Implementação da V1.0 | Pendente |
+| 4 | Implementação da V1.0 | Em andamento — fundação aplicada |
 | 5 | Lançamento do MVP | Pendente |
 
 ---
@@ -41,14 +44,14 @@ Próximo: iniciar a Fase 4 — implementação da V1.0.
 
 ## 3. Status de Implementação
 
-Esqueleto da Fase 3 escrito; nenhum requisito funcional implementado ainda.
+Fundação da Fase 4 entregue. Próxima frente: RF-1 (ingestão de pedidos).
 
 | Área | Componente | Status |
 |---|---|---|
-| Fundação | Monorepo + npm workspaces + TS estrito + CI | Esqueleto validado (install/typecheck/lint/test ok) |
-| Fundação | Schema Drizzle (`packages/db` — 17 tabelas) | Modelado — `db:push` ainda não executado |
+| Fundação | Monorepo + npm workspaces + TS estrito + CI | Esqueleto validado; CI agora levanta Postgres como serviço e roda integração |
+| Fundação | Schema Drizzle (`packages/db` — 17 tabelas) | Aplicado em Postgres real via `db:push` |
 | Fundação | Validadores Zod (`packages/shared`) | Esqueleto escrito |
-| Fundação | Auth JWT + middleware de tenant | Não iniciado |
+| Fundação | Auth JWT + middleware de tenant | Implementado — `POST /v1/auth/login` + `app.authenticate` + `app.requireRole` (18 testes verdes) |
 | RF-1 | Ingestão de pedidos (cardápio, WhatsApp, triagem) | Não iniciado (api/pos em esqueleto) |
 | RF-2 | Motor ESC/POS + ponte de impressão Go | Casca WS no `apps/bridge` (`/health` + ack), sem ESC/POS real |
 | RF-3 | Cardápio & onboarding | Não iniciado |
@@ -60,12 +63,24 @@ Esqueleto da Fase 3 escrito; nenhum requisito funcional implementado ainda.
 
 ## 4. Próximos Passos
 
-1. Iniciar a Fase 4 — implementação da V1.0, começando pela fundação (auth JWT + middleware de
-   tenant + `db:push` contra um Postgres real) e por RF-1 (ingestão de pedidos).
-2. **Pré-lançamento (hardening):** tratar as 8 vulnerabilidades moderadas restantes na cadeia
-   `esbuild → vite / vitest / drizzle-kit` — fix exige subir Vite 5 → 8 (3 majors, quebraria
-   `vite-plugin-pwa` e a integração com `vitest 2.x`). Risco é apenas dev/CI; não bloqueia a
-   Fase 4.
+1. **RF-1 — Ingestão de pedidos.** Endpoints autenticados (`POST /v1/orders`,
+   `GET /v1/orders`, transição/cancelamento) + cardápio público (`GET /v1/menu/:slug`,
+   `POST /v1/menu/:slug/orders`) + recálculo autoritativo de preço (RNF §12). Em paralelo,
+   triage no PWA do PDV consumindo o WS de eventos.
+2. **Pendência de spec — `POST /v1/orders/:id/pix-charge`:** definir corpo de requisição
+   em `api-contracts.md §8` antes da implementação do Pix (Fase 4 / RF-4). Já modelado em
+   `packages/shared` com `expires_in_seconds` opcional.
+3. **Pendência de schema — TZ por tenant:** o índice `idx_orders_daily_seq` usa
+   `'America/Sao_Paulo'` hardcoded (coerente com "pt-BR + BRL apenas" do MVP). Revisar para
+   `tenants.timezone` quando expandirmos região / V1.1+.
+4. **Pendência de auth — colisão de email entre tenants:** schema permite email
+   duplicado em tenants distintos; login global trata como "credencial inválida" (sem
+   adivinhar tenant). UX final (workspace selector / email globalmente único) entra em
+   uma revisão pós-MVP.
+5. **Pré-lançamento (hardening):** tratar as 5 vulnerabilidades moderadas restantes na
+   cadeia `esbuild → vite / vitest / drizzle-kit` — fix exige subir Vite 5 → 8 (3 majors,
+   quebraria `vite-plugin-pwa` e a integração com `vitest 2.x`). Risco é apenas dev/CI;
+   não bloqueia a Fase 4.
 
 ---
 
@@ -90,6 +105,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-24 | **Fundação da Fase 4 entregue.** (a) `docker-compose.yml` (Postgres 16-alpine, volume persistente, healthcheck) na raiz; `.env.example` já apontava para a mesma URL. (b) `db:push` aplicou as 17 tabelas — `drizzle-orm` precisou ser declarado como devDep da raiz para o npm hoistar e o `drizzle-kit` (root) resolver o ORM (sintoma "Error please install required packages: 'drizzle-orm'" típico de monorepo). (c) Bug do schema corrigido: o índice `idx_orders_daily_seq` usava `(created_at::date)`, mas para `timestamptz` o cast é STABLE e Postgres exige IMMUTABLE em btree; trocado por `((created_at AT TIME ZONE 'America/Sao_Paulo')::date)` — fixado e refletido em `data-schema.md` §3 e `packages/db/src/schema/orders.ts`. O TZ está hardcoded coerente com a decisão "pt-BR + BRL apenas" do MVP; per-tenant TZ entra no §4. (d) `apps/api` ganhou `config.ts` (Zod valida `DATABASE_URL`, `JWT_SECRET ≥ 32`, `PORT`, `HOST`, `NODE_ENV`), `lib/password.ts` (`bcryptjs` puro JS — sem node-gyp, OWASP 10 rounds), `plugins/auth.ts` (registra `@fastify/jwt`, decora `app.authenticate` e `app.requireRole` via `fastify-plugin`; popula `req.auth = { userId, tenantId, role }` exclusivamente do JWT — RNF-1) e `routes/auth.ts` (`POST /v1/auth/login` com `loginInputSchema` strict, resposta uniforme em todos os 401 para evitar enumeração, refusa colisão de email entre tenants). (e) `server.ts` recebe `{ db, jwtSecret }` para injeção em testes; `main.ts` carrega `loadConfig()` + `createClient()`. (f) **18 testes verdes** — 3 password, 8 plugin de auth (401 sem token / mal-assinado / expirado / claims inválidos; 200 popula auth; 403 RBAC operator → manager; 200 manager e owner), 6 integração rota de login (200 + token verificável, 401 senha errada, 401 email inexistente, 401 colisão multi-tenant, 422 corpo mal-formado, 422 campo extra rejeitado pelo `.strict()`) — mais `/health` e 1 PWA antigo. Smoke test HTTP confirmou login → JWT com `sub`/`tenant_id`/`role`/`exp`. (g) CI agora levanta `postgres:16-alpine` como serviço e exporta `INTEGRATION_DATABASE_URL` antes do `npm run test`, então a suíte de integração roda no PR. (h) Deps novas em `apps/api`: `@fastify/jwt ^10.1`, `bcryptjs ^3`, `fastify-plugin`, `@saas-foodtech/db`, `@saas-foodtech/shared`. CVEs moderadas caíram de 8 → 5 com o install. |
 | 2026-05-22 | **Drizzle ORM bumpado** para `^0.45.2` (+ `drizzle-kit ^0.31.10`), fechando a CVE alta de SQL injection por identificadores mal escapados (GHSA-gpj5-g38j-94v9). Schema DSL é estável entre versões — typecheck e testes seguem verdes; a quebra de API da 0.45 é só na camada de queries, ainda não escrita. As 8 CVEs moderadas restantes ficam na cadeia `esbuild → vite / vitest / drizzle-kit` (dev/CI apenas): fix passa por subir Vite 5 → 8 (3 majors), risco contido em desenvolvimento. Adiado para hardening pré-MVP — registrado no §4. |
 | 2026-05-22 | **Fase 3 concluída.** Esqueleto validado localmente: `npm install` (632 pacotes, 54s), `npm run typecheck`, `npm run lint`, `npm run test` (3 verdes — `apps/api` `/health`, `apps/pos` `ConnectionStatus`, `apps/bridge` `go test`). Correções no caminho: (1) `packages/db/tsconfig.json` deixou de incluir `drizzle.config.ts` (conflitava com `rootDir: "./src"`); (2) `packages/db/src/schema/ledger.ts` agora importa `AnyPgColumn` de `drizzle-orm/pg-core` (mudou de pacote na 0.36); (3) script `test` da raiz passa a delegar para os workspaces (`--workspaces --if-present`) para cada um carregar sua própria config do Vitest (apps/pos precisa de jsdom). Anotado: 9 vulnerabilidades transitivas (8 mod, 1 alta) — listadas no §4 para revisar antes da Fase 4. |
 | 2026-05-22 | **Fase 3 iniciada.** Esqueleto do monorepo escrito (root config + `apps/{api,pos,bridge}` + `packages/{db,shared}` + GitHub Actions). Stack escolhida: npm workspaces + TypeScript estrito + Fastify v5 + React 18/Vite 5/`vite-plugin-pwa` + Go 1.22 com `github.com/coder/websocket` + Drizzle ORM/PostgreSQL + Zod + Vitest + ESLint flat + Prettier. **Drizzle** sobre Prisma pelo footprint baixo em VPS 1c/1GB (RNF-2) e schema TS espelho do `data-schema.md`; **npm workspaces** sobre pnpm por alinhamento com `CLAUDE.md`. |

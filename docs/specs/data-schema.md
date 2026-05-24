@@ -3,7 +3,7 @@
 - **Status:** Estável (V1.0)
 - **Documento mestre:** `docs/specs/spec.md` (§6)
 - **Escopo:** V1.0 (MVP)
-- **Última atualização:** 2026-05-22
+- **Última atualização:** 2026-05-24
 
 Detalha o schema PostgreSQL da V1.0 referenciado em §6 do documento mestre. Cobre todas as
 tabelas, índices, constraints e invariantes do MVP.
@@ -188,9 +188,14 @@ CREATE INDEX idx_orders_tenant        ON orders(tenant_id);
 CREATE INDEX idx_orders_tenant_status ON orders(tenant_id, status);
 CREATE INDEX idx_orders_tenant_date   ON orders(tenant_id, created_at);
 CREATE INDEX idx_orders_courier       ON orders(courier_id);
--- Unicidade do sequencial diário por loja
+-- Unicidade do sequencial diário por loja.
+-- A "data do pedido" é o dia civil em `America/Sao_Paulo` — coerente com a decisão
+-- "i18n fora de escopo / pt-BR + BRL apenas" (spec.md §7). O cast direto
+-- `(created_at::date)` não pode ir em índice btree: para `timestamptz` o resultado
+-- depende do timezone da sessão (STABLE), Postgres exige IMMUTABLE.
+-- `(... AT TIME ZONE 'America/Sao_Paulo')::date` fixa a conversão e é aceito.
 CREATE UNIQUE INDEX idx_orders_daily_seq
-  ON orders(tenant_id, daily_sequence, (created_at::date));
+  ON orders(tenant_id, daily_sequence, ((created_at AT TIME ZONE 'America/Sao_Paulo')::date));
 
 -- Itens de um pedido (linha de produto)
 CREATE TABLE order_items (
