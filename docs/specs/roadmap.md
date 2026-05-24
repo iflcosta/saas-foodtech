@@ -19,7 +19,8 @@
 (plugin Fastify decora `req.auth = { userId, tenantId, role }`) + RBAC por papel +
 `POST /v1/auth/login` com bcryptjs. Validado com 18 testes verdes (12 unit + 6
 integração contra Postgres real) e smoke test HTTP. CI ganhou serviço Postgres para
-rodar a suíte de integração. Próximo: RF-1 (ingestão de pedidos).
+rodar a suíte de integração. Próximo: **fatia 4b.1** — cardápio admin + leitura pública
+(ver §4.1 para a sequência completa).
 
 | # | Fase | Status |
 |---|---|---|
@@ -63,24 +64,42 @@ Fundação da Fase 4 entregue. Próxima frente: RF-1 (ingestão de pedidos).
 
 ## 4. Próximos Passos
 
-1. **RF-1 — Ingestão de pedidos.** Endpoints autenticados (`POST /v1/orders`,
-   `GET /v1/orders`, transição/cancelamento) + cardápio público (`GET /v1/menu/:slug`,
-   `POST /v1/menu/:slug/orders`) + recálculo autoritativo de preço (RNF §12). Em paralelo,
-   triage no PWA do PDV consumindo o WS de eventos.
-2. **Pendência de spec — `POST /v1/orders/:id/pix-charge`:** definir corpo de requisição
-   em `api-contracts.md §8` antes da implementação do Pix (Fase 4 / RF-4). Já modelado em
-   `packages/shared` com `expires_in_seconds` opcional.
-3. **Pendência de schema — TZ por tenant:** o índice `idx_orders_daily_seq` usa
-   `'America/Sao_Paulo'` hardcoded (coerente com "pt-BR + BRL apenas" do MVP). Revisar para
-   `tenants.timezone` quando expandirmos região / V1.1+.
-4. **Pendência de auth — colisão de email entre tenants:** schema permite email
-   duplicado em tenants distintos; login global trata como "credencial inválida" (sem
-   adivinhar tenant). UX final (workspace selector / email globalmente único) entra em
-   uma revisão pós-MVP.
-5. **Pré-lançamento (hardening):** tratar as 5 vulnerabilidades moderadas restantes na
-   cadeia `esbuild → vite / vitest / drizzle-kit` — fix exige subir Vite 5 → 8 (3 majors,
-   quebraria `vite-plugin-pwa` e a integração com `vitest 2.x`). Risco é apenas dev/CI;
-   não bloqueia a Fase 4.
+### 4.1 Sequência da Fase 4
+
+Espinha do MVP do menor risco ao maior, cada fatia entrega valor demonstrável sem
+depender da seguinte. Detalhamento (rotas exatas, schemas Zod, testes) é escrito **no
+início de cada fatia**, não aqui — este §4.1 é apenas o mapa.
+
+| Fatia | Status | Escopo | RFs cobertos | Encerra em |
+|---|---|---|---|---|
+| 4a — Fundação | Concluída | Auth JWT + middleware de tenant + Postgres + `db:push` | RNF-1, RNF-5 | "Login devolve token escopado por tenant" |
+| 4b.1 — Cardápio admin + leitura pública | **Próxima** | CRUD autenticado de `categories` / `products` / `modifier_groups` / `modifiers` + attach grupos a produto + `GET /v1/menu/:slug` público | RF-3.1, RF-3.2 (rotas) | "Lojista monta cardápio; link público renderiza" |
+| 4b.2 — Ingestão de pedido | Pendente | `POST /v1/menu/:slug/orders` (público) + `POST /v1/orders` (manual, operator) + recálculo autoritativo de `unit_price` / `subtotal` / `total` no servidor (RNF §12) + pizza fracionada (ADR-Q9) + combos rejeitados se preço zerar | RF-1 ingestão, RF-3.3 | "Pedido aparece em `orders` com status `pending`" |
+| 4c — Triage + WS + PWA panel | Pendente | `GET /v1/orders` (filtro por status/data) + `POST /accept` + `POST /transition` + `POST /cancel` + WS `/v1/ws` (`order.new`, `order.status_changed`) + tela de triagem + alerta sonoro repetido (RF-1.5) | RF-1.1 a RF-1.5 | "Operador aceita pedido com 1 toque na tela" |
+| 4d — Motor ESC/POS | Pendente | Geração de buffers ESC/POS em `apps/api` + bridge Go consumindo via WS local (porta 9100) + roteamento setorial (`kitchen`/`bar`/`dispatch`) + `print_jobs` + ACK | RF-2 completo | "Aceitar pedido imprime comanda na térmica" |
+| 4e — Pix dinâmico (Asaas) | Pendente | `POST /v1/orders/:id/pix-charge` (resolver body em `api-contracts.md §8` antes — pendência aberta) + webhook Asaas assinado + bloqueio de despacho até liquidação (409 `payment_required`) | RF-4 | "Cliente paga Pix; despacho desbloqueia automaticamente" |
+| 4f — Ledger + fechamento de caixa | Pendente | Lançamentos de dupla entrada append-only + conta por motoboy (RF-5.3) + acerto em tempo real + fechamento de caixa cego (RF-5.4) | RF-5 | "Lojista fecha o dia com Ledger íntegro" |
+| 4g — Resiliência PWA | Pendente | Service Worker + Cache API + IndexedDB para pedidos em aberto e buffers de impressão + `npm run diagnostics:local` real | RF-6, RNF-3 | "PDV opera com Wi-Fi piscando; recupera no reconnect" |
+
+> **Regra:** ao fechar cada fatia, atualizar §1 (fase atual), §3 (status), §6 (decisão
+> corrida) e bumpar a data do cabeçalho — no mesmo commit da entrega.
+
+### 4.2 Pendências de spec/schema/auth em aberto
+
+1. **`api-contracts.md §8` — body do `POST /v1/orders/:id/pix-charge`** sem definição.
+   Resolver junto da 4e. Já modelado em `packages/shared` com `expires_in_seconds` opcional.
+2. **Schema — TZ por tenant.** Índice `idx_orders_daily_seq` usa `'America/Sao_Paulo'`
+   hardcoded (coerente com "pt-BR + BRL apenas"). Revisar para `tenants.timezone` em
+   V1.1+ se expandir região.
+3. **Auth — colisão de email entre tenants.** Schema permite email duplicado em tenants
+   distintos; login global trata como "credencial inválida" (sem adivinhar tenant). UX
+   final (workspace selector / email globalmente único) revisita pós-MVP.
+
+### 4.3 Hardening pré-MVP
+
+5 vulnerabilidades moderadas restantes na cadeia `esbuild → vite / vitest / drizzle-kit`.
+Fix exige subir Vite 5 → 8 (3 majors, quebraria `vite-plugin-pwa` e a integração com
+`vitest 2.x`). Risco é apenas dev/CI; não bloqueia a Fase 4. Tratar antes do lançamento.
 
 ---
 
@@ -105,6 +124,7 @@ Decisões tomadas durante o desenvolvimento que **não** são ADRs da entrevista
 
 | Data | Decisão |
 |---|---|
+| 2026-05-24 | **Sequência da Fase 4 mapeada** (§4.1): 4a fundação → 4b.1 cardápio admin + leitura pública → 4b.2 ingestão de pedido → 4c triage + WS + PWA → 4d ESC/POS → 4e Pix → 4f Ledger → 4g resiliência PWA. Espinha vertical: cada fatia entrega valor demonstrável sem depender da seguinte. Optou-se por iniciar pela 4b.1 (cardápio antes da ingestão) para evitar seed throwaway e exercitar o `requireRole('manager')` em rotas reais. Detalhamento por fatia (rotas, schemas Zod, testes) é escrito no início de cada — este §4.1 é apenas o mapa. Auditoria do estado pré-fatia: branch limpa, 17 tabelas no Drizzle ✓, 18 testes verdes, sem TODOs/órfãos, datas dos specs coerentes (apenas `data-schema.md` e `roadmap.md` em 2026-05-24, os demais em 2026-05-22 — corretos pois não foram tocados). |
 | 2026-05-24 | **Fundação da Fase 4 entregue.** (a) `docker-compose.yml` (Postgres 16-alpine, volume persistente, healthcheck) na raiz; `.env.example` já apontava para a mesma URL. (b) `db:push` aplicou as 17 tabelas — `drizzle-orm` precisou ser declarado como devDep da raiz para o npm hoistar e o `drizzle-kit` (root) resolver o ORM (sintoma "Error please install required packages: 'drizzle-orm'" típico de monorepo). (c) Bug do schema corrigido: o índice `idx_orders_daily_seq` usava `(created_at::date)`, mas para `timestamptz` o cast é STABLE e Postgres exige IMMUTABLE em btree; trocado por `((created_at AT TIME ZONE 'America/Sao_Paulo')::date)` — fixado e refletido em `data-schema.md` §3 e `packages/db/src/schema/orders.ts`. O TZ está hardcoded coerente com a decisão "pt-BR + BRL apenas" do MVP; per-tenant TZ entra no §4. (d) `apps/api` ganhou `config.ts` (Zod valida `DATABASE_URL`, `JWT_SECRET ≥ 32`, `PORT`, `HOST`, `NODE_ENV`), `lib/password.ts` (`bcryptjs` puro JS — sem node-gyp, OWASP 10 rounds), `plugins/auth.ts` (registra `@fastify/jwt`, decora `app.authenticate` e `app.requireRole` via `fastify-plugin`; popula `req.auth = { userId, tenantId, role }` exclusivamente do JWT — RNF-1) e `routes/auth.ts` (`POST /v1/auth/login` com `loginInputSchema` strict, resposta uniforme em todos os 401 para evitar enumeração, refusa colisão de email entre tenants). (e) `server.ts` recebe `{ db, jwtSecret }` para injeção em testes; `main.ts` carrega `loadConfig()` + `createClient()`. (f) **18 testes verdes** — 3 password, 8 plugin de auth (401 sem token / mal-assinado / expirado / claims inválidos; 200 popula auth; 403 RBAC operator → manager; 200 manager e owner), 6 integração rota de login (200 + token verificável, 401 senha errada, 401 email inexistente, 401 colisão multi-tenant, 422 corpo mal-formado, 422 campo extra rejeitado pelo `.strict()`) — mais `/health` e 1 PWA antigo. Smoke test HTTP confirmou login → JWT com `sub`/`tenant_id`/`role`/`exp`. (g) CI agora levanta `postgres:16-alpine` como serviço e exporta `INTEGRATION_DATABASE_URL` antes do `npm run test`, então a suíte de integração roda no PR. (h) Deps novas em `apps/api`: `@fastify/jwt ^10.1`, `bcryptjs ^3`, `fastify-plugin`, `@saas-foodtech/db`, `@saas-foodtech/shared`. CVEs moderadas caíram de 8 → 5 com o install. |
 | 2026-05-22 | **Drizzle ORM bumpado** para `^0.45.2` (+ `drizzle-kit ^0.31.10`), fechando a CVE alta de SQL injection por identificadores mal escapados (GHSA-gpj5-g38j-94v9). Schema DSL é estável entre versões — typecheck e testes seguem verdes; a quebra de API da 0.45 é só na camada de queries, ainda não escrita. As 8 CVEs moderadas restantes ficam na cadeia `esbuild → vite / vitest / drizzle-kit` (dev/CI apenas): fix passa por subir Vite 5 → 8 (3 majors), risco contido em desenvolvimento. Adiado para hardening pré-MVP — registrado no §4. |
 | 2026-05-22 | **Fase 3 concluída.** Esqueleto validado localmente: `npm install` (632 pacotes, 54s), `npm run typecheck`, `npm run lint`, `npm run test` (3 verdes — `apps/api` `/health`, `apps/pos` `ConnectionStatus`, `apps/bridge` `go test`). Correções no caminho: (1) `packages/db/tsconfig.json` deixou de incluir `drizzle.config.ts` (conflitava com `rootDir: "./src"`); (2) `packages/db/src/schema/ledger.ts` agora importa `AnyPgColumn` de `drizzle-orm/pg-core` (mudou de pacote na 0.36); (3) script `test` da raiz passa a delegar para os workspaces (`--workspaces --if-present`) para cada um carregar sua própria config do Vitest (apps/pos precisa de jsdom). Anotado: 9 vulnerabilidades transitivas (8 mod, 1 alta) — listadas no §4 para revisar antes da Fase 4. |
