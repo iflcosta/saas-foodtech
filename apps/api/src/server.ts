@@ -9,6 +9,10 @@ import cors from '@fastify/cors';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { authPlugin } from './plugins/auth.js';
 import { authRoutes } from './routes/auth.js';
+import { categoriesRoutes } from './routes/categories.js';
+import { menuRoutes } from './routes/menu.js';
+import { modifierGroupsRoutes } from './routes/modifier-groups.js';
+import { productsRoutes } from './routes/products.js';
 
 export interface BuildOptions {
   db: DbClient;
@@ -33,6 +37,14 @@ export async function build(opts: BuildOptions): Promise<FastifyInstance> {
     db: opts.db,
     tokenExpiresIn: opts.tokenExpiresIn,
   });
+
+  // Admin do cardápio (autenticado, manager+)
+  await app.register(categoriesRoutes, { db: opts.db });
+  await app.register(productsRoutes, { db: opts.db });
+  await app.register(modifierGroupsRoutes, { db: opts.db });
+
+  // Cardápio público (sem auth)
+  await app.register(menuRoutes, { db: opts.db });
 
   return app;
 }
