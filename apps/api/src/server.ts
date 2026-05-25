@@ -6,12 +6,14 @@
  */
 import type { DbClient } from '@saas-foodtech/db';
 import cors from '@fastify/cors';
+import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { authPlugin } from './plugins/auth.js';
 import { authRoutes } from './routes/auth.js';
 import { categoriesRoutes } from './routes/categories.js';
 import { menuRoutes } from './routes/menu.js';
 import { modifierGroupsRoutes } from './routes/modifier-groups.js';
+import { ordersRoutes } from './routes/orders.js';
 import { productsRoutes } from './routes/products.js';
 
 export interface BuildOptions {
@@ -19,12 +21,20 @@ export interface BuildOptions {
   jwtSecret: string;
   logger?: boolean;
   tokenExpiresIn?: string;
+  rateLimitDisabled?: boolean;
 }
 
 export async function build(opts: BuildOptions): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? true });
 
   await app.register(cors, { origin: true });
+  await app.register(rateLimit, {
+    global: true,
+    max: 200,
+    timeWindow: '1 minute',
+    // Disable for test env so integration tests aren't throttled
+    ...(opts.rateLimitDisabled ? { max: 1_000_000 } : {}),
+  });
   await app.register(authPlugin, { jwtSecret: opts.jwtSecret });
 
   app.get('/health', async () => ({
@@ -45,6 +55,9 @@ export async function build(opts: BuildOptions): Promise<FastifyInstance> {
 
   // Cardápio público (sem auth)
   await app.register(menuRoutes, { db: opts.db });
+
+  // Pedidos — criação pública + CRUD autenticado
+  await app.register(ordersRoutes, { db: opts.db });
 
   return app;
 }

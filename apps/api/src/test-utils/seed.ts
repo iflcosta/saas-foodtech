@@ -64,7 +64,7 @@ export async function createTestContext(databaseUrl: string): Promise<TestContex
     })
     .returning({ id: users.id });
 
-  const app = await build({ db, jwtSecret: TEST_JWT_SECRET, logger: false });
+  const app = await build({ db, jwtSecret: TEST_JWT_SECRET, logger: false, rateLimitDisabled: true });
 
   const managerToken = app.jwt.sign(
     { sub: manager!.id, tenant_id: tenantId, role: 'manager' },

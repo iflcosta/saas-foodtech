@@ -32,7 +32,7 @@ export const orders = pgTable(
     id: uuid('id').primaryKey(),
     tenantId: uuid('tenant_id')
       .notNull()
-      .references(() => tenants.id),
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     // #101, #102… atribuído pelo servidor no momento do sync
     dailySequence: integer('daily_sequence'),
     status: text('status').notNull().default('pending'),
@@ -93,7 +93,7 @@ export const orderItems = pgTable(
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     tenantId: uuid('tenant_id')
       .notNull()
-      .references(() => tenants.id),
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     orderId: uuid('order_id')
       .notNull()
       .references(() => orders.id, { onDelete: 'cascade' }),
@@ -128,7 +128,7 @@ export const orderItemModifiers = pgTable(
     id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     tenantId: uuid('tenant_id')
       .notNull()
-      .references(() => tenants.id),
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     orderItemId: uuid('order_item_id')
       .notNull()
       .references(() => orderItems.id, { onDelete: 'cascade' }),

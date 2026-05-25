@@ -3,7 +3,7 @@
 - **Status:** Estável (V1.0)
 - **Documento mestre:** `docs/specs/spec.md` (§6)
 - **Escopo:** V1.0 (MVP)
-- **Última atualização:** 2026-05-24
+- **Última atualização:** 2026-05-25
 
 Detalha o schema PostgreSQL da V1.0 referenciado em §6 do documento mestre. Cobre todas as
 tabelas, índices, constraints e invariantes do MVP.
@@ -157,7 +157,7 @@ CREATE TABLE product_modifier_groups (
 -- Estados: pending → confirmed → preparing → ready → dispatched → delivered | cancelled
 CREATE TABLE orders (
   id               UUID PRIMARY KEY,                -- UUIDv4 gerado no cliente (ADR-Q10)
-  tenant_id        UUID NOT NULL REFERENCES tenants(id),
+  tenant_id        UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   daily_sequence   INT,                             -- #101, #102… gerado pelo servidor no sync
   status           TEXT NOT NULL DEFAULT 'pending'
                      CHECK (status IN (
@@ -200,7 +200,7 @@ CREATE UNIQUE INDEX idx_orders_daily_seq
 -- Itens de um pedido (linha de produto)
 CREATE TABLE order_items (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id     UUID NOT NULL REFERENCES tenants(id),
+  tenant_id     UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   order_id      UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
   product_id    UUID NOT NULL REFERENCES products(id),
   product_name  TEXT NOT NULL,          -- snapshot em tempo de criação
@@ -218,7 +218,7 @@ CREATE INDEX idx_order_items_order  ON order_items(order_id);
 -- Modificadores aplicados a cada item de pedido
 CREATE TABLE order_item_modifiers (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id         UUID NOT NULL REFERENCES tenants(id),
+  tenant_id         UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   order_item_id     UUID NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,
   modifier_id       UUID NOT NULL REFERENCES modifiers(id),
   modifier_name     TEXT NOT NULL,       -- snapshot
